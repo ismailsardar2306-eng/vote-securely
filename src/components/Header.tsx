@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Shield, Menu, X } from "lucide-react";
 import { useState } from "react";
+import { Link } from "react-router-dom";
 
 export const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -37,12 +38,16 @@ export const Header = () => {
 
           {/* Desktop Actions */}
           <div className="hidden md:flex items-center gap-3">
-            <Button variant="ghost" size="sm">
-              Voter Login
-            </Button>
-            <Button variant="default" size="sm">
-              Admin Portal
-            </Button>
+            <Link to="/vote">
+              <Button variant="ghost" size="sm">
+                Vote Now
+              </Button>
+            </Link>
+            <Link to="/admin">
+              <Button variant="default" size="sm">
+                Admin Portal
+              </Button>
+            </Link>
           </div>
 
           {/* Mobile Menu Button */}
