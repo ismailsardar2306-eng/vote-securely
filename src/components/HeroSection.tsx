@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { BlockchainAnimation } from "./BlockchainAnimation";
 import { ArrowRight, Vote, ShieldCheck } from "lucide-react";
+import { Link } from "react-router-dom";
 
 export const HeroSection = () => {
   return (
@@ -35,11 +36,13 @@ export const HeroSection = () => {
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-in" style={{ animationDelay: "0.4s" }}>
-            <Button variant="hero" size="xl">
-              <Vote className="w-5 h-5 mr-2" />
-              Cast Your Vote
-              <ArrowRight className="w-5 h-5 ml-2" />
-            </Button>
+            <Link to="/vote">
+              <Button variant="hero" size="xl">
+                <Vote className="w-5 h-5 mr-2" />
+                Cast Your Vote
+                <ArrowRight className="w-5 h-5 ml-2" />
+              </Button>
+            </Link>
             <Button variant="outline" size="xl">
               Learn How It Works
             </Button>
