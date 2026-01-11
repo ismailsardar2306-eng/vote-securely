@@ -14,10 +14,13 @@ import {
   LogOut,
 } from "lucide-react";
 
+import { FileCheck } from "lucide-react";
+
 const navItems = [
   { icon: LayoutDashboard, label: "Overview", path: "/admin" },
   { icon: Vote, label: "Elections", path: "/admin/elections" },
   { icon: Users, label: "Candidates", path: "/admin/candidates" },
+  { icon: FileCheck, label: "Verifications", path: "/admin/verifications" },
   { icon: BarChart3, label: "Results", path: "/admin/results" },
   { icon: Settings, label: "Settings", path: "/admin/settings" },
 ];
