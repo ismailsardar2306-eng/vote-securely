@@ -1,10 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { CandidateCard, Candidate } from "@/components/voting/CandidateCard";
 import { VoteConfirmationDialog } from "@/components/voting/VoteConfirmationDialog";
 import { BlockchainReceipt } from "@/components/voting/BlockchainReceipt";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import { 
   Vote, 
   Search, 
@@ -12,9 +15,12 @@ import {
   Clock, 
   Users, 
   Shield,
-  ChevronRight
+  ChevronRight,
+  AlertTriangle,
+  Loader2
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 // Mock candidates data
 const mockCandidates: Candidate[] = [
@@ -88,6 +94,10 @@ const generateVoterId = () => {
 };
 
 const VotingPage = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [isVerified, setIsVerified] = useState<boolean | null>(null);
+  const [checkingVerification, setCheckingVerification] = useState(true);
   const [selectedCandidate, setSelectedCandidate] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
@@ -99,6 +109,29 @@ const VotingPage = () => {
     timestamp: Date;
     voterId: string;
   } | null>(null);
+
+  useEffect(() => {
+    const checkVerification = async () => {
+      if (!user) return;
+      
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('is_verified')
+        .eq('user_id', user.id)
+        .single();
+      
+      if (error) {
+        console.error('Error checking verification:', error);
+        setIsVerified(false);
+      } else {
+        setIsVerified(data?.is_verified || false);
+      }
+      
+      setCheckingVerification(false);
+    };
+    
+    checkVerification();
+  }, [user]);
 
   const filteredCandidates = mockCandidates.filter(
     (candidate) =>
@@ -131,6 +164,43 @@ const VotingPage = () => {
     setShowConfirmDialog(false);
     setVoteComplete(true);
   };
+
+  // Show loading while checking verification
+  if (checkingVerification) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  // Show verification required message
+  if (!isVerified) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main className="pt-24 pb-20">
+          <div className="container mx-auto px-4">
+            <div className="max-w-lg mx-auto text-center">
+              <div className="p-4 bg-yellow-500/10 rounded-full w-20 h-20 mx-auto mb-6 flex items-center justify-center">
+                <AlertTriangle className="h-10 w-10 text-yellow-500" />
+              </div>
+              <h1 className="text-2xl font-bold mb-4">Verification Required</h1>
+              <p className="text-muted-foreground mb-8">
+                You need to verify your identity before you can participate in elections. 
+                Please submit your ID documents for verification.
+              </p>
+              <Button onClick={() => navigate('/verification')} size="lg">
+                <Shield className="h-4 w-4 mr-2" />
+                Get Verified
+              </Button>
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   // Show receipt if vote is complete
   if (voteComplete && selectedCandidateData && receiptData) {

@@ -8,9 +8,11 @@ import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import Index from "./pages/Index";
 import AuthPage from "./pages/AuthPage";
 import VotingPage from "./pages/VotingPage";
+import VerificationPage from "./pages/VerificationPage";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import ElectionsPage from "./pages/admin/ElectionsPage";
 import CandidatesPage from "./pages/admin/CandidatesPage";
+import VerificationsPage from "./pages/admin/VerificationsPage";
 import ResultsPage from "./pages/admin/ResultsPage";
 import SettingsPage from "./pages/admin/SettingsPage";
 import NotFound from "./pages/NotFound";
@@ -27,6 +29,14 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<AuthPage />} />
+            <Route 
+              path="/verification" 
+              element={
+                <ProtectedRoute>
+                  <VerificationPage />
+                </ProtectedRoute>
+              } 
+            />
             <Route 
               path="/vote" 
               element={
@@ -56,6 +66,14 @@ const App = () => (
               element={
                 <ProtectedRoute requireAdmin>
                   <CandidatesPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/verifications" 
+              element={
+                <ProtectedRoute requireAdmin>
+                  <VerificationsPage />
                 </ProtectedRoute>
               } 
             />
