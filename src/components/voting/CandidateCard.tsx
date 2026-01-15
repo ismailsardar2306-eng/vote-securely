@@ -1,6 +1,4 @@
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Check } from "lucide-react";
+import { Check, TrendingUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export interface Candidate {
@@ -10,6 +8,7 @@ export interface Candidate {
   position: string;
   image: string;
   votes?: number;
+  voteCount?: number;
   manifesto: string[];
 }
 
@@ -18,9 +17,21 @@ interface CandidateCardProps {
   isSelected: boolean;
   onSelect: (id: string) => void;
   disabled?: boolean;
+  showVoteCount?: boolean;
+  totalVotes?: number;
 }
 
-export const CandidateCard = ({ candidate, isSelected, onSelect, disabled }: CandidateCardProps) => {
+export const CandidateCard = ({ 
+  candidate, 
+  isSelected, 
+  onSelect, 
+  disabled,
+  showVoteCount,
+  totalVotes = 0
+}: CandidateCardProps) => {
+  const voteCount = candidate.voteCount || candidate.votes || 0;
+  const percentage = totalVotes > 0 ? Math.round((voteCount / totalVotes) * 100) : 0;
+
   return (
     <div
       onClick={() => !disabled && onSelect(candidate.id)}
@@ -61,6 +72,27 @@ export const CandidateCard = ({ candidate, isSelected, onSelect, disabled }: Can
         <p className="text-sm text-secondary font-medium">{candidate.party}</p>
         <p className="text-xs text-muted-foreground mt-1">{candidate.position}</p>
       </div>
+
+      {/* Vote Count Display */}
+      {showVoteCount && (
+        <div className="mb-4">
+          <div className="flex items-center justify-between text-sm mb-2">
+            <span className="flex items-center gap-1 text-muted-foreground">
+              <TrendingUp className="w-3 h-3" />
+              Votes
+            </span>
+            <span className="font-semibold text-foreground tabular-nums">
+              {voteCount.toLocaleString()} ({percentage}%)
+            </span>
+          </div>
+          <div className="h-2 bg-muted rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-gradient-to-r from-secondary to-secondary/70 rounded-full transition-all duration-500 ease-out"
+              style={{ width: `${percentage}%` }}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Manifesto Points */}
       <ul className="space-y-2">

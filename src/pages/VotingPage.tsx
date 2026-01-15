@@ -7,6 +7,7 @@ import { VoteConfirmationDialog } from "@/components/voting/VoteConfirmationDial
 import { BlockchainReceipt } from "@/components/voting/BlockchainReceipt";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
+import { useElection } from "@/hooks/useElection";
 import { supabase } from "@/integrations/supabase/client";
 import { 
   Vote, 
@@ -17,72 +18,11 @@ import {
   Shield,
   ChevronRight,
   AlertTriangle,
-  Loader2
+  Loader2,
+  TrendingUp
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-
-// Mock candidates data
-const mockCandidates: Candidate[] = [
-  {
-    id: "1",
-    name: "Sarah Mitchell",
-    party: "Progressive Alliance",
-    position: "Student Council President",
-    image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&h=200&fit=crop&crop=face",
-    manifesto: [
-      "Improve campus sustainability initiatives",
-      "Increase mental health support resources",
-      "Create more student networking events",
-    ],
-  },
-  {
-    id: "2",
-    name: "Michael Chen",
-    party: "Unity Movement",
-    position: "Student Council President",
-    image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop&crop=face",
-    manifesto: [
-      "Modernize campus technology infrastructure",
-      "Establish innovation and startup hub",
-      "Enhance international student programs",
-    ],
-  },
-  {
-    id: "3",
-    name: "Emily Rodriguez",
-    party: "Student First Coalition",
-    position: "Student Council President",
-    image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&h=200&fit=crop&crop=face",
-    manifesto: [
-      "Reduce tuition fees and hidden costs",
-      "Improve campus dining options",
-      "Extend library and facility hours",
-    ],
-  },
-  {
-    id: "4",
-    name: "James Thompson",
-    party: "Independent",
-    position: "Student Council President",
-    image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&h=200&fit=crop&crop=face",
-    manifesto: [
-      "Transparent budget allocation",
-      "Student feedback integration system",
-      "Community outreach programs",
-    ],
-  },
-];
-
-// Generate mock hash
-const generateHash = () => {
-  const chars = '0123456789abcdef';
-  let hash = '0x';
-  for (let i = 0; i < 64; i++) {
-    hash += chars[Math.floor(Math.random() * chars.length)];
-  }
-  return hash;
-};
+import { toast } from "sonner";
 
 const generateVoterId = () => {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -96,6 +36,17 @@ const generateVoterId = () => {
 const VotingPage = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { 
+    activeElection, 
+    candidates, 
+    voteCounts, 
+    totalVotes, 
+    hasVoted,
+    loading: electionLoading,
+    castVote,
+    checkUserVote 
+  } = useElection();
+
   const [isVerified, setIsVerified] = useState<boolean | null>(null);
   const [checkingVerification, setCheckingVerification] = useState(true);
   const [selectedCandidate, setSelectedCandidate] = useState<string | null>(null);
@@ -133,13 +84,31 @@ const VotingPage = () => {
     checkVerification();
   }, [user]);
 
-  const filteredCandidates = mockCandidates.filter(
+  // Check if user has already voted
+  useEffect(() => {
+    if (user?.id) {
+      checkUserVote(user.id);
+    }
+  }, [user?.id, activeElection?.id]);
+
+  // Transform database candidates to component format
+  const transformedCandidates: Candidate[] = candidates.map((c) => ({
+    id: c.id,
+    name: c.name,
+    party: c.party || "Independent",
+    position: activeElection?.title || "Candidate",
+    image: c.image_url || `https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop&crop=face`,
+    manifesto: c.bio ? c.bio.split('\n').filter(Boolean) : [],
+    voteCount: voteCounts[c.id] || 0,
+  }));
+
+  const filteredCandidates = transformedCandidates.filter(
     (candidate) =>
       candidate.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       candidate.party.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const selectedCandidateData = mockCandidates.find(
+  const selectedCandidateData = transformedCandidates.find(
     (c) => c.id === selectedCandidate
   );
 
@@ -148,25 +117,48 @@ const VotingPage = () => {
   };
 
   const handleConfirmVote = async () => {
+    if (!user || !selectedCandidate) return;
+    
     setIsSubmitting(true);
     
-    // Simulate blockchain transaction
-    await new Promise((resolve) => setTimeout(resolve, 2500));
+    const result = await castVote(selectedCandidate, user.id);
     
-    setReceiptData({
-      transactionHash: generateHash(),
-      blockNumber: Math.floor(Math.random() * 1000000) + 15000000,
-      timestamp: new Date(),
-      voterId: generateVoterId(),
-    });
+    if (result.success) {
+      setReceiptData({
+        transactionHash: result.hash!,
+        blockNumber: Math.floor(Math.random() * 1000000) + 15000000,
+        timestamp: new Date(),
+        voterId: generateVoterId(),
+      });
+      
+      setShowConfirmDialog(false);
+      setVoteComplete(true);
+      toast.success("Vote cast successfully!");
+    } else {
+      toast.error(result.error || "Failed to cast vote");
+    }
     
     setIsSubmitting(false);
-    setShowConfirmDialog(false);
-    setVoteComplete(true);
+  };
+
+  // Calculate time remaining
+  const getTimeRemaining = () => {
+    if (!activeElection?.end_date) return "N/A";
+    const end = new Date(activeElection.end_date);
+    const now = new Date();
+    const diff = end.getTime() - now.getTime();
+    
+    if (diff <= 0) return "Ended";
+    
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    
+    if (days > 0) return `${days}d ${hours}h`;
+    return `${hours}h`;
   };
 
   // Show loading while checking verification
-  if (checkingVerification) {
+  if (checkingVerification || electionLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -193,6 +185,58 @@ const VotingPage = () => {
               <Button onClick={() => navigate('/verification')} size="lg">
                 <Shield className="h-4 w-4 mr-2" />
                 Get Verified
+              </Button>
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  // Show no active election message
+  if (!activeElection) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main className="pt-24 pb-20">
+          <div className="container mx-auto px-4">
+            <div className="max-w-lg mx-auto text-center">
+              <div className="p-4 bg-muted rounded-full w-20 h-20 mx-auto mb-6 flex items-center justify-center">
+                <Vote className="h-10 w-10 text-muted-foreground" />
+              </div>
+              <h1 className="text-2xl font-bold mb-4">No Active Elections</h1>
+              <p className="text-muted-foreground mb-8">
+                There are no active elections at the moment. Check back later for upcoming elections.
+              </p>
+              <Button onClick={() => navigate('/')} variant="outline" size="lg">
+                Return Home
+              </Button>
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  // Show already voted message
+  if (hasVoted && !voteComplete) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main className="pt-24 pb-20">
+          <div className="container mx-auto px-4">
+            <div className="max-w-lg mx-auto text-center">
+              <div className="p-4 bg-secondary/10 rounded-full w-20 h-20 mx-auto mb-6 flex items-center justify-center">
+                <Shield className="h-10 w-10 text-secondary" />
+              </div>
+              <h1 className="text-2xl font-bold mb-4">Already Voted</h1>
+              <p className="text-muted-foreground mb-8">
+                You have already cast your vote in this election. Your vote has been securely recorded on the blockchain.
+              </p>
+              <Button onClick={() => navigate('/')} variant="outline" size="lg">
+                Return Home
               </Button>
             </div>
           </div>
@@ -229,14 +273,14 @@ const VotingPage = () => {
                 <span className="text-sm font-medium text-secondary">
                   Live Election
                 </span>
+                <TrendingUp className="w-4 h-4 text-secondary" />
               </span>
               
               <h1 className="font-display text-3xl sm:text-4xl font-bold text-foreground mb-3">
-                Student Council Election 2024
+                {activeElection.title}
               </h1>
               <p className="text-muted-foreground max-w-2xl mx-auto">
-                Select your preferred candidate for Student Council President. 
-                Your vote will be securely recorded on the blockchain.
+                {activeElection.description || "Select your preferred candidate. Your vote will be securely recorded on the blockchain."}
               </p>
             </div>
 
@@ -245,12 +289,15 @@ const VotingPage = () => {
               <div className="p-4 rounded-xl bg-card border border-border text-center">
                 <Clock className="w-5 h-5 text-secondary mx-auto mb-2" />
                 <p className="text-xs text-muted-foreground">Ends In</p>
-                <p className="font-display font-semibold text-foreground">2d 14h</p>
+                <p className="font-display font-semibold text-foreground">{getTimeRemaining()}</p>
               </div>
-              <div className="p-4 rounded-xl bg-card border border-border text-center">
-                <Users className="w-5 h-5 text-secondary mx-auto mb-2" />
-                <p className="text-xs text-muted-foreground">Total Votes</p>
-                <p className="font-display font-semibold text-foreground">1,247</p>
+              <div className="p-4 rounded-xl bg-card border border-border text-center relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-r from-secondary/5 to-transparent animate-pulse" />
+                <Users className="w-5 h-5 text-secondary mx-auto mb-2 relative z-10" />
+                <p className="text-xs text-muted-foreground relative z-10">Total Votes</p>
+                <p className="font-display font-semibold text-foreground relative z-10 tabular-nums">
+                  {totalVotes.toLocaleString()}
+                </p>
               </div>
               <div className="p-4 rounded-xl bg-card border border-border text-center">
                 <Shield className="w-5 h-5 text-secondary mx-auto mb-2" />
@@ -281,16 +328,24 @@ const VotingPage = () => {
 
           {/* Candidates Grid */}
           <div className="max-w-4xl mx-auto">
-            <div className="grid sm:grid-cols-2 lg:grid-cols-2 gap-6 mb-8">
-              {filteredCandidates.map((candidate) => (
-                <CandidateCard
-                  key={candidate.id}
-                  candidate={candidate}
-                  isSelected={selectedCandidate === candidate.id}
-                  onSelect={setSelectedCandidate}
-                />
-              ))}
-            </div>
+            {filteredCandidates.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-muted-foreground">No candidates found for this election.</p>
+              </div>
+            ) : (
+              <div className="grid sm:grid-cols-2 lg:grid-cols-2 gap-6 mb-8">
+                {filteredCandidates.map((candidate) => (
+                  <CandidateCard
+                    key={candidate.id}
+                    candidate={candidate}
+                    isSelected={selectedCandidate === candidate.id}
+                    onSelect={setSelectedCandidate}
+                    showVoteCount
+                    totalVotes={totalVotes}
+                  />
+                ))}
+              </div>
+            )}
 
             {/* Submit Vote Button */}
             <div className="sticky bottom-4 bg-background/80 backdrop-blur-lg p-4 rounded-2xl border border-border shadow-lg">

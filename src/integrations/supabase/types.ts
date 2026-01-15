@@ -14,6 +14,77 @@ export type Database = {
   }
   public: {
     Tables: {
+      candidates: {
+        Row: {
+          bio: string | null
+          created_at: string
+          election_id: string
+          id: string
+          image_url: string | null
+          name: string
+          party: string | null
+        }
+        Insert: {
+          bio?: string | null
+          created_at?: string
+          election_id: string
+          id?: string
+          image_url?: string | null
+          name: string
+          party?: string | null
+        }
+        Update: {
+          bio?: string | null
+          created_at?: string
+          election_id?: string
+          id?: string
+          image_url?: string | null
+          name?: string
+          party?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "candidates_election_id_fkey"
+            columns: ["election_id"]
+            isOneToOne: false
+            referencedRelation: "elections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      elections: {
+        Row: {
+          created_at: string
+          description: string | null
+          end_date: string
+          id: string
+          start_date: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          end_date: string
+          id?: string
+          start_date: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          end_date?: string
+          id?: string
+          start_date?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -112,6 +183,48 @@ export type Database = {
           voter_id?: string | null
         }
         Relationships: []
+      }
+      votes: {
+        Row: {
+          blockchain_hash: string | null
+          candidate_id: string
+          created_at: string
+          election_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          blockchain_hash?: string | null
+          candidate_id: string
+          created_at?: string
+          election_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          blockchain_hash?: string | null
+          candidate_id?: string
+          created_at?: string
+          election_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "votes_candidate_id_fkey"
+            columns: ["candidate_id"]
+            isOneToOne: false
+            referencedRelation: "candidates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "votes_election_id_fkey"
+            columns: ["election_id"]
+            isOneToOne: false
+            referencedRelation: "elections"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
