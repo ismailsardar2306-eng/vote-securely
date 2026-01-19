@@ -97,27 +97,27 @@ export const useElection = (electionId?: string) => {
     fetchCandidates();
   }, [activeElection?.id]);
 
-  // Fetch vote counts and check if user has voted
+  // Fetch vote counts from aggregated view (protects ballot secrecy)
   const fetchVoteCounts = async () => {
     if (!activeElection?.id) return;
 
-    // Get vote counts per candidate
-    const { data: votes, error } = await supabase
-      .from("votes")
-      .select("candidate_id")
+    // Get vote counts per candidate from the secure vote_counts view
+    const { data: voteCounts, error } = await supabase
+      .from("vote_counts")
+      .select("candidate_id, vote_count")
       .eq("election_id", activeElection.id);
 
     if (error) {
-      console.error("Error fetching votes:", error);
+      console.error("Error fetching vote counts:", error);
       return;
     }
 
     const counts: Record<string, number> = {};
     let total = 0;
 
-    votes?.forEach((vote) => {
-      counts[vote.candidate_id] = (counts[vote.candidate_id] || 0) + 1;
-      total++;
+    voteCounts?.forEach((row) => {
+      counts[row.candidate_id] = row.vote_count;
+      total += row.vote_count;
     });
 
     setVoteCounts(counts);
