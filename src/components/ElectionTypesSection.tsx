@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Building2, GraduationCap, ArrowRight } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const electionTypes = [
   {
@@ -31,6 +32,12 @@ const electionTypes = [
 ];
 
 export const ElectionTypesSection = () => {
+  const navigate = useNavigate();
+
+  const handleExplore = (type: string) => {
+    navigate(`/vote?type=${type}`);
+  };
+
   return (
     <section id="elections" className="py-20 bg-background">
       <div className="container mx-auto px-4">
@@ -86,6 +93,7 @@ export const ElectionTypesSection = () => {
                 <Button 
                   variant={election.color === 'primary' ? 'default' : 'accent'}
                   className="w-full group"
+                  onClick={() => handleExplore(election.title === 'State Elections' ? 'state' : 'college')}
                 >
                   {election.cta}
                   <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
