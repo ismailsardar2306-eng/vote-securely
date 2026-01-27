@@ -36,6 +36,7 @@ export const useElection = (electionId?: string) => {
   // Fetch all elections
   useEffect(() => {
     const fetchElections = async () => {
+      setLoading(true);
       const { data, error } = await supabase
         .from("elections")
         .select("*")
@@ -43,12 +44,16 @@ export const useElection = (electionId?: string) => {
 
       if (error) {
         console.error("Error fetching elections:", error);
+        setLoading(false);
       } else {
         setElections(data || []);
         // Set the first active election as default
         const active = data?.find((e) => e.status === "active");
         if (active && !electionId) {
           setActiveElection(active);
+        } else {
+          // No active election found, stop loading
+          setLoading(false);
         }
       }
     };
