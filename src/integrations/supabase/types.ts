@@ -85,6 +85,39 @@ export type Database = {
         }
         Relationships: []
       }
+      otp_verifications: {
+        Row: {
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          otp_code: string
+          user_id: string
+          verified: boolean
+          voter_id: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          expires_at: string
+          id?: string
+          otp_code: string
+          user_id: string
+          verified?: boolean
+          voter_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          otp_code?: string
+          user_id?: string
+          verified?: boolean
+          voter_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
