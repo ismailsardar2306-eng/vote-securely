@@ -37,18 +37,12 @@ export const BlockchainAnimation = () => {
             stroke="hsl(var(--secondary))"
             strokeWidth="0.3"
             strokeDasharray="1,1"
-            className="animate-pulse-slow"
-            style={{ animationDelay: `${block.delay}s` }}
           />
         ))}
         
         {/* Blocks */}
         {blocks.map((block) => (
-          <g
-            key={block.id}
-            className="animate-float"
-            style={{ animationDelay: `${block.delay}s` }}
-          >
+          <g key={block.id}>
             <rect
               x={block.x}
               y={block.y}
