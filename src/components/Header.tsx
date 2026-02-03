@@ -4,6 +4,8 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { WalletConnect } from "@/components/WalletConnect";
+import { useWeb3 } from "@/hooks/useWeb3";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,8 +16,12 @@ import {
 
 export const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { user, isAdmin, signOut } = useAuth();
+  const { user, isAdmin: isSupabaseAdmin, signOut } = useAuth();
+  const { isAdmin: isBlockchainAdmin, isConnected } = useWeb3();
   const navigate = useNavigate();
+  
+  // User is admin if they're admin in either system
+  const isAdmin = isSupabaseAdmin || isBlockchainAdmin;
 
   const handleSignOut = async () => {
     await signOut();
@@ -55,6 +61,7 @@ export const Header = () => {
           {/* Desktop Actions */}
           <div className="hidden md:flex items-center gap-3">
             <ThemeToggle />
+            <WalletConnect />
             {user ? (
               <>
                 <Link to="/vote">

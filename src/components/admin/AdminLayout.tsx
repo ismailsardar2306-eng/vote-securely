@@ -12,6 +12,7 @@ import {
   ChevronLeft,
   ChevronRight,
   LogOut,
+  Blocks,
 } from "lucide-react";
 
 import { FileCheck } from "lucide-react";
@@ -22,6 +23,7 @@ const navItems = [
   { icon: Users, label: "Candidates", path: "/admin/candidates" },
   { icon: FileCheck, label: "Verifications", path: "/admin/verifications" },
   { icon: BarChart3, label: "Results", path: "/admin/results" },
+  { icon: Blocks, label: "Blockchain", path: "/admin/blockchain" },
   { icon: Settings, label: "Settings", path: "/admin/settings" },
 ];
 
