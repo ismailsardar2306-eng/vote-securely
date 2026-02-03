@@ -3,6 +3,7 @@ import { Shield, Menu, X, LogOut, User } from "lucide-react";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -53,6 +54,7 @@ export const Header = () => {
 
           {/* Desktop Actions */}
           <div className="hidden md:flex items-center gap-3">
+            <ThemeToggle />
             {user ? (
               <>
                 <Link to="/vote">
