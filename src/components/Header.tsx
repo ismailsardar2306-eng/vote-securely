@@ -56,6 +56,9 @@ export const Header = () => {
             <a href="/#security" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
               Security
             </a>
+            <Link to="/blockchain-vote" className="text-sm font-medium text-secondary hover:text-secondary/80 transition-colors">
+              Blockchain Vote
+            </Link>
           </nav>
 
           {/* Desktop Actions */}
@@ -140,6 +143,9 @@ export const Header = () => {
               <a href="/#security" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
                 Security
               </a>
+              <Link to="/blockchain-vote" className="text-sm font-medium text-secondary hover:text-secondary/80 transition-colors">
+                Blockchain Vote
+              </Link>
               <div className="flex flex-col gap-3 pt-4 border-t border-border">
                 {user ? (
                   <>
