@@ -219,17 +219,23 @@ contract VotingSystem {
         return (e.id, e.title, e.description, e.electionType, e.startDate, e.endDate, e.exists);
     }
     
-    function getCandidate(uint256 candidateId) external view returns (
+    function getCandidateBasic(uint256 candidateId) external view returns (
         uint256 id,
         uint256 electionId,
         string memory name,
-        string memory party,
+        string memory party
+    ) {
+        Candidate storage c = candidates[candidateId];
+        return (c.id, c.electionId, c.name, c.party);
+    }
+    
+    function getCandidateDetails(uint256 candidateId) external view returns (
         string memory bio,
         string memory imageUrl,
         uint256 voteCount_
     ) {
         Candidate storage c = candidates[candidateId];
-        return (c.id, c.electionId, c.name, c.party, c.bio, c.imageUrl, candidateVotes[candidateId]);
+        return (c.bio, c.imageUrl, candidateVotes[candidateId]);
     }
     
     function getElectionCandidateIds(uint256 electionId) external view returns (uint256[] memory) {
