@@ -72,8 +72,9 @@ export const useBlockchainElection = () => {
       const candidates: BlockchainCandidate[] = [];
       
       for (const cId of candidateIds) {
-        const [id, eId, name, party, bio, imageUrl, voteCount] = 
-          await contract.getCandidate(cId.toNumber());
+        // Call both functions to get complete candidate data
+        const [id, eId, name, party] = await contract.getCandidateBasic(cId.toNumber());
+        const [bio, imageUrl, voteCount] = await contract.getCandidateDetails(cId.toNumber());
         
         candidates.push({
           id: id.toNumber(),
