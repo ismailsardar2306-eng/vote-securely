@@ -6,7 +6,7 @@ export const CONTRACT_CONFIG = {
   
   // Contract address - UPDATE THIS after deploying to Ganache
   // Deploy the VotingSystem.sol contract and paste the address here
-  CONTRACT_ADDRESS: "",
+  CONTRACT_ADDRESS: "0xd9145CCE52D386f254917e481eB44e9943F39138",
   
   // Network display name
   NETWORK_NAME: "Ganache Local",
