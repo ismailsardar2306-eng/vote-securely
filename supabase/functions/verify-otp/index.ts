@@ -76,6 +76,18 @@ serve(async (req: Request): Promise<Response> => {
       throw new Error("Failed to verify code");
     }
 
+    // Check if this voter_id is already assigned to another user
+    const { data: existingProfile } = await supabaseAdmin
+      .from("profiles")
+      .select("user_id")
+      .eq("voter_id", otpRecord.voter_id)
+      .neq("user_id", user.id)
+      .maybeSingle();
+
+    if (existingProfile) {
+      throw new Error("This Voter ID is already registered to another account");
+    }
+
     // Update user's profile to mark as verified
     const { error: profileError } = await supabaseAdmin
       .from("profiles")
