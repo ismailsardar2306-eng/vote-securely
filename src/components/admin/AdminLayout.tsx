@@ -4,27 +4,18 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
   Shield,
-  LayoutDashboard,
   Vote,
   Users,
   BarChart3,
-  Settings,
   ChevronLeft,
   ChevronRight,
   LogOut,
-  Blocks,
 } from "lucide-react";
 
-import { FileCheck } from "lucide-react";
-
 const navItems = [
-  { icon: LayoutDashboard, label: "Overview", path: "/admin" },
-  { icon: Vote, label: "Elections", path: "/admin/elections" },
+  { icon: Vote, label: "Elections", path: "/admin" },
   { icon: Users, label: "Candidates", path: "/admin/candidates" },
-  { icon: FileCheck, label: "Verifications", path: "/admin/verifications" },
   { icon: BarChart3, label: "Results", path: "/admin/results" },
-  { icon: Blocks, label: "Blockchain", path: "/admin/blockchain" },
-  { icon: Settings, label: "Settings", path: "/admin/settings" },
 ];
 
 interface AdminLayoutProps {
