@@ -12,13 +12,9 @@ import AuthPage from "./pages/AuthPage";
 import VotingPage from "./pages/VotingPage";
 import VerificationPage from "./pages/VerificationPage";
 import BlockchainVotingPage from "./pages/BlockchainVotingPage";
-import AdminDashboard from "./pages/admin/AdminDashboard";
 import ElectionsPage from "./pages/admin/ElectionsPage";
 import CandidatesPage from "./pages/admin/CandidatesPage";
-import VerificationsPage from "./pages/admin/VerificationsPage";
 import ResultsPage from "./pages/admin/ResultsPage";
-import SettingsPage from "./pages/admin/SettingsPage";
-import BlockchainAdminPage from "./pages/admin/BlockchainAdminPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -55,14 +51,6 @@ const App = () => (
               path="/admin" 
               element={
                 <ProtectedRoute requireAdmin>
-                  <AdminDashboard />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/admin/elections" 
-              element={
-                <ProtectedRoute requireAdmin>
                   <ElectionsPage />
                 </ProtectedRoute>
               } 
@@ -76,14 +64,6 @@ const App = () => (
               } 
             />
             <Route 
-              path="/admin/verifications" 
-              element={
-                <ProtectedRoute requireAdmin>
-                  <VerificationsPage />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
               path="/admin/results" 
               element={
                 <ProtectedRoute requireAdmin>
@@ -91,16 +71,7 @@ const App = () => (
                 </ProtectedRoute>
               } 
             />
-            <Route 
-              path="/admin/settings" 
-              element={
-                <ProtectedRoute requireAdmin>
-                  <SettingsPage />
-                </ProtectedRoute>
-              } 
-            />
             <Route path="/blockchain-vote" element={<BlockchainVotingPage />} />
-            <Route path="/admin/blockchain" element={<BlockchainAdminPage />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
