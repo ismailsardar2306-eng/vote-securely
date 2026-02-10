@@ -26,6 +26,7 @@ import {
   Edit,
   Trash2,
   User,
+  Loader2,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -33,91 +34,28 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-
-interface Candidate {
-  id: string;
-  name: string;
-  party: string;
-  position: string;
-  election: string;
-  image: string;
-  manifesto: string[];
-  votes: number;
-}
-
-const mockCandidates: Candidate[] = [
-  {
-    id: "1",
-    name: "Sarah Mitchell",
-    party: "Progressive Alliance",
-    position: "Student Council President",
-    election: "Student Council 2024",
-    image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&h=200&fit=crop&crop=face",
-    manifesto: ["Improve campus sustainability", "Mental health support", "Student networking"],
-    votes: 456,
-  },
-  {
-    id: "2",
-    name: "Michael Chen",
-    party: "Unity Movement",
-    position: "Student Council President",
-    election: "Student Council 2024",
-    image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop&crop=face",
-    manifesto: ["Campus technology", "Startup hub", "International programs"],
-    votes: 389,
-  },
-  {
-    id: "3",
-    name: "Emily Rodriguez",
-    party: "Student First Coalition",
-    position: "Student Council President",
-    election: "Student Council 2024",
-    image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&h=200&fit=crop&crop=face",
-    manifesto: ["Reduce fees", "Better dining", "Extended hours"],
-    votes: 298,
-  },
-  {
-    id: "4",
-    name: "James Thompson",
-    party: "Independent",
-    position: "Student Council President",
-    election: "Student Council 2024",
-    image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&h=200&fit=crop&crop=face",
-    manifesto: ["Transparent budget", "Feedback system", "Community outreach"],
-    votes: 104,
-  },
-  {
-    id: "5",
-    name: "Dr. Robert Williams",
-    party: "Academic Excellence",
-    position: "Faculty Senate",
-    election: "Faculty Senate Q1 2024",
-    image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&h=200&fit=crop&crop=face",
-    manifesto: ["Research funding", "Faculty benefits", "Tenure reform"],
-    votes: 234,
-  },
-];
-
-const elections = [
-  "Student Council 2024",
-  "Faculty Senate Q1 2024",
-  "State Governor Primary",
-  "Department Head Election",
-];
+import { useCandidatesAdmin } from "@/hooks/useCandidatesAdmin";
 
 const CandidatesPage = () => {
-  const [candidates, setCandidates] = useState<Candidate[]>(mockCandidates);
+  const {
+    candidates,
+    elections,
+    loading,
+    createCandidate,
+    updateCandidate,
+    deleteCandidate,
+  } = useCandidatesAdmin();
+
   const [searchQuery, setSearchQuery] = useState("");
   const [filterElection, setFilterElection] = useState<string>("all");
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [editingCandidate, setEditingCandidate] = useState<Candidate | null>(null);
+  const [editingCandidateId, setEditingCandidateId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     name: "",
     party: "",
-    position: "",
-    election: "",
-    image: "",
-    manifesto: "",
+    bio: "",
+    image_url: "",
+    election_id: "",
   });
 
   const filteredCandidates = candidates.filter((candidate) => {
@@ -125,86 +63,54 @@ const CandidatesPage = () => {
       .toLowerCase()
       .includes(searchQuery.toLowerCase());
     const matchesElection =
-      filterElection === "all" || candidate.election === filterElection;
+      filterElection === "all" || candidate.election_id === filterElection;
     return matchesSearch && matchesElection;
   });
 
-  const handleCreateCandidate = () => {
-    const newCandidate: Candidate = {
-      id: Date.now().toString(),
-      name: formData.name,
-      party: formData.party,
-      position: formData.position,
-      election: formData.election,
-      image: formData.image || "https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=200&h=200&fit=crop&crop=face",
-      manifesto: formData.manifesto.split("\n").filter((m) => m.trim()),
-      votes: 0,
-    };
-    setCandidates([newCandidate, ...candidates]);
-    setIsCreateDialogOpen(false);
-    resetForm();
+  const handleCreate = async () => {
+    if (!formData.name || !formData.election_id) return;
+    const success = await createCandidate(formData);
+    if (success) {
+      setIsCreateDialogOpen(false);
+      resetForm();
+    }
   };
 
-  const handleEditCandidate = () => {
-    if (!editingCandidate) return;
-    setCandidates(
-      candidates.map((c) =>
-        c.id === editingCandidate.id
-          ? {
-              ...c,
-              name: formData.name,
-              party: formData.party,
-              position: formData.position,
-              election: formData.election,
-              image: formData.image || c.image,
-              manifesto: formData.manifesto.split("\n").filter((m) => m.trim()),
-            }
-          : c
-      )
-    );
-    setEditingCandidate(null);
-    resetForm();
+  const handleEdit = async () => {
+    if (!editingCandidateId || !formData.name || !formData.election_id) return;
+    const success = await updateCandidate(editingCandidateId, formData);
+    if (success) {
+      setEditingCandidateId(null);
+      resetForm();
+    }
   };
 
-  const handleDeleteCandidate = (id: string) => {
-    setCandidates(candidates.filter((c) => c.id !== id));
+  const handleDelete = async (id: string) => {
+    await deleteCandidate(id);
   };
 
   const resetForm = () => {
-    setFormData({
-      name: "",
-      party: "",
-      position: "",
-      election: "",
-      image: "",
-      manifesto: "",
-    });
+    setFormData({ name: "", party: "", bio: "", image_url: "", election_id: "" });
   };
 
-  const openEditDialog = (candidate: Candidate) => {
+  const openEditDialog = (candidate: typeof candidates[0]) => {
     setFormData({
       name: candidate.name,
-      party: candidate.party,
-      position: candidate.position,
-      election: candidate.election,
-      image: candidate.image,
-      manifesto: candidate.manifesto.join("\n"),
+      party: candidate.party || "",
+      bio: candidate.bio || "",
+      image_url: candidate.image_url || "",
+      election_id: candidate.election_id,
     });
-    setEditingCandidate(candidate);
+    setEditingCandidateId(candidate.id);
   };
 
   return (
     <AdminLayout>
       <div className="p-8">
-        {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
           <div>
-            <h1 className="font-display text-3xl font-bold text-foreground">
-              Candidates
-            </h1>
-            <p className="text-muted-foreground mt-1">
-              Manage candidates across all elections
-            </p>
+            <h1 className="font-display text-3xl font-bold text-foreground">Candidates</h1>
+            <p className="text-muted-foreground mt-1">Manage candidates across all elections</p>
           </div>
           <Button variant="hero" onClick={() => setIsCreateDialogOpen(true)}>
             <Plus className="w-5 h-5 mr-2" />
@@ -212,7 +118,6 @@ const CandidatesPage = () => {
           </Button>
         </div>
 
-        {/* Filters */}
         <div className="flex flex-col sm:flex-row gap-4 mb-6">
           <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
@@ -230,94 +135,80 @@ const CandidatesPage = () => {
             <SelectContent>
               <SelectItem value="all">All Elections</SelectItem>
               {elections.map((election) => (
-                <SelectItem key={election} value={election}>
-                  {election}
+                <SelectItem key={election.id} value={election.id}>
+                  {election.title}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
 
-        {/* Candidates Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {filteredCandidates.map((candidate) => (
-            <Card key={candidate.id} className="border-border hover:shadow-md transition-shadow">
-              <CardContent className="p-6">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="w-16 h-16 rounded-full bg-muted overflow-hidden border-2 border-secondary">
-                    <img
-                      src={candidate.image}
-                      alt={candidate.name}
-                      className="w-full h-full object-cover"
-                    />
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+          </div>
+        ) : filteredCandidates.length === 0 ? (
+          <div className="text-center py-12 text-muted-foreground">
+            <User className="w-12 h-12 mx-auto mb-4 opacity-50" />
+            <p>No candidates found. Add one to get started.</p>
+          </div>
+        ) : (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {filteredCandidates.map((candidate) => (
+              <Card key={candidate.id} className="border-border hover:shadow-md transition-shadow">
+                <CardContent className="p-6">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="w-16 h-16 rounded-full bg-muted overflow-hidden border-2 border-secondary">
+                      {candidate.image_url ? (
+                        <img src={candidate.image_url} alt={candidate.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <User className="w-8 h-8 text-muted-foreground" />
+                        </div>
+                      )}
+                    </div>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon">
+                          <MoreVertical className="w-4 h-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => openEditDialog(candidate)}>
+                          <Edit className="w-4 h-4 mr-2" />
+                          Edit
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          className="text-destructive"
+                          onClick={() => handleDelete(candidate.id)}
+                        >
+                          <Trash2 className="w-4 h-4 mr-2" />
+                          Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon">
-                        <MoreVertical className="w-4 h-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => openEditDialog(candidate)}>
-                        <Edit className="w-4 h-4 mr-2" />
-                        Edit
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        className="text-destructive"
-                        onClick={() => handleDeleteCandidate(candidate.id)}
-                      >
-                        <Trash2 className="w-4 h-4 mr-2" />
-                        Delete
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
 
-                <h3 className="font-display font-semibold text-foreground">
-                  {candidate.name}
-                </h3>
-                <p className="text-sm text-secondary font-medium">
-                  {candidate.party}
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {candidate.position}
-                </p>
+                  <h3 className="font-display font-semibold text-foreground">{candidate.name}</h3>
+                  <p className="text-sm text-secondary font-medium">{candidate.party || "Independent"}</p>
 
-                <div className="mt-4 pt-4 border-t border-border">
-                  <p className="text-xs text-muted-foreground mb-2">Election</p>
-                  <p className="text-sm font-medium text-foreground">
-                    {candidate.election}
-                  </p>
-                </div>
-
-                <div className="mt-4 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <User className="w-4 h-4 text-secondary" />
-                    <span className="text-sm font-medium text-foreground">
-                      {candidate.votes.toLocaleString()} votes
-                    </span>
+                  <div className="mt-4 pt-4 border-t border-border">
+                    <p className="text-xs text-muted-foreground mb-1">Election</p>
+                    <p className="text-sm font-medium text-foreground">{candidate.election_title}</p>
                   </div>
-                  <div className="h-2 w-20 bg-muted rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-secondary rounded-full"
-                      style={{
-                        width: `${Math.min((candidate.votes / 500) * 100, 100)}%`,
-                      }}
-                    />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
 
         {/* Create/Edit Dialog */}
         <Dialog
-          open={isCreateDialogOpen || !!editingCandidate}
+          open={isCreateDialogOpen || !!editingCandidateId}
           onOpenChange={(open) => {
             if (!open) {
               setIsCreateDialogOpen(false);
-              setEditingCandidate(null);
+              setEditingCandidateId(null);
               resetForm();
             }
           }}
@@ -325,10 +216,10 @@ const CandidatesPage = () => {
           <DialogContent className="sm:max-w-lg">
             <DialogHeader>
               <DialogTitle className="font-display">
-                {editingCandidate ? "Edit Candidate" : "Add New Candidate"}
+                {editingCandidateId ? "Edit Candidate" : "Add New Candidate"}
               </DialogTitle>
               <DialogDescription>
-                {editingCandidate
+                {editingCandidateId
                   ? "Update the candidate's information below."
                   : "Fill in the details to add a new candidate."}
               </DialogDescription>
@@ -342,9 +233,7 @@ const CandidatesPage = () => {
                     id="name"
                     placeholder="John Doe"
                     value={formData.name}
-                    onChange={(e) =>
-                      setFormData({ ...formData, name: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   />
                 </div>
                 <div className="space-y-2">
@@ -353,40 +242,24 @@ const CandidatesPage = () => {
                     id="party"
                     placeholder="Progressive Alliance"
                     value={formData.party}
-                    onChange={(e) =>
-                      setFormData({ ...formData, party: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, party: e.target.value })}
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="position">Position</Label>
-                <Input
-                  id="position"
-                  placeholder="Student Council President"
-                  value={formData.position}
-                  onChange={(e) =>
-                    setFormData({ ...formData, position: e.target.value })
-                  }
-                />
-              </div>
-
-              <div className="space-y-2">
                 <Label>Election</Label>
                 <Select
-                  value={formData.election}
-                  onValueChange={(value) =>
-                    setFormData({ ...formData, election: value })
-                  }
+                  value={formData.election_id}
+                  onValueChange={(value) => setFormData({ ...formData, election_id: value })}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select election" />
                   </SelectTrigger>
                   <SelectContent>
                     {elections.map((election) => (
-                      <SelectItem key={election} value={election}>
-                        {election}
+                      <SelectItem key={election.id} value={election.id}>
+                        {election.title}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -394,27 +267,23 @@ const CandidatesPage = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="image">Profile Image URL</Label>
+                <Label htmlFor="image_url">Profile Image URL</Label>
                 <Input
-                  id="image"
+                  id="image_url"
                   placeholder="https://example.com/photo.jpg"
-                  value={formData.image}
-                  onChange={(e) =>
-                    setFormData({ ...formData, image: e.target.value })
-                  }
+                  value={formData.image_url}
+                  onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="manifesto">Manifesto Points (one per line)</Label>
+                <Label htmlFor="bio">Bio</Label>
                 <Textarea
-                  id="manifesto"
-                  placeholder="Point 1&#10;Point 2&#10;Point 3"
+                  id="bio"
+                  placeholder="Brief description of the candidate..."
                   rows={4}
-                  value={formData.manifesto}
-                  onChange={(e) =>
-                    setFormData({ ...formData, manifesto: e.target.value })
-                  }
+                  value={formData.bio}
+                  onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
                 />
               </div>
             </div>
@@ -425,7 +294,7 @@ const CandidatesPage = () => {
                 className="flex-1"
                 onClick={() => {
                   setIsCreateDialogOpen(false);
-                  setEditingCandidate(null);
+                  setEditingCandidateId(null);
                   resetForm();
                 }}
               >
@@ -434,9 +303,9 @@ const CandidatesPage = () => {
               <Button
                 variant="hero"
                 className="flex-1"
-                onClick={editingCandidate ? handleEditCandidate : handleCreateCandidate}
+                onClick={editingCandidateId ? handleEdit : handleCreate}
               >
-                {editingCandidate ? "Save Changes" : "Add Candidate"}
+                {editingCandidateId ? "Save Changes" : "Add Candidate"}
               </Button>
             </div>
           </DialogContent>
