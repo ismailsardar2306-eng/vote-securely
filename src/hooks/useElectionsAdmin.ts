@@ -85,6 +85,18 @@ export const useElectionsAdmin = () => {
     return true;
   };
 
+  const updateElectionStatus = async (id: string, status: string) => {
+    const { error } = await supabase.from("elections").update({ status }).eq("id", id);
+    if (error) {
+      console.error("Error updating election status:", error);
+      toast.error("Failed to update election status");
+      return false;
+    }
+    toast.success(`Election ${status === "active" ? "activated" : "deactivated"}`);
+    await fetchElections();
+    return true;
+  };
+
   const deleteElection = async (id: string) => {
     const { error } = await supabase.from("elections").delete().eq("id", id);
 
@@ -99,5 +111,5 @@ export const useElectionsAdmin = () => {
     return true;
   };
 
-  return { elections, loading, createElection, deleteElection, refetch: fetchElections };
+  return { elections, loading, createElection, deleteElection, updateElectionStatus, refetch: fetchElections };
 };
