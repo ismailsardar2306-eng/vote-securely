@@ -56,13 +56,15 @@ export const CandidateCard = ({
       </div>
 
       {/* Candidate Image */}
-      <div className="w-20 h-20 rounded-full bg-muted mx-auto mb-4 overflow-hidden border-2 border-border group-hover:border-secondary/30 transition-colors">
-        <img
-          src={candidate.image}
-          alt={candidate.name}
-          className="w-full h-full object-cover"
-        />
-      </div>
+      {candidate.image && (
+        <div className="w-20 h-20 rounded-full bg-muted mx-auto mb-4 overflow-hidden border-2 border-border group-hover:border-secondary/30 transition-colors">
+          <img
+            src={candidate.image}
+            alt={candidate.name}
+            className="w-full h-full object-cover"
+          />
+        </div>
+      )}
 
       {/* Candidate Info */}
       <div className="text-center mb-4">
