@@ -158,15 +158,11 @@ const CandidatesPage = () => {
               <Card key={candidate.id} className="border-border hover:shadow-md transition-shadow">
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between mb-4">
-                    <div className="w-16 h-16 rounded-full bg-muted overflow-hidden border-2 border-secondary">
-                      {candidate.image_url ? (
+                    {candidate.image_url && (
+                      <div className="w-16 h-16 rounded-full bg-muted overflow-hidden border-2 border-secondary">
                         <img src={candidate.image_url} alt={candidate.name} className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <User className="w-8 h-8 text-muted-foreground" />
-                        </div>
-                      )}
-                    </div>
+                      </div>
+                    )}
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="icon">
