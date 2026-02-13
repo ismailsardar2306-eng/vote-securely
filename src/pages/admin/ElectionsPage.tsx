@@ -23,10 +23,11 @@ import {
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, Search, Calendar, Users, Vote, Trash2 } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import { useElectionsAdmin } from "@/hooks/useElectionsAdmin";
 
 const ElectionsPage = () => {
-  const { elections, loading, createElection, deleteElection } = useElectionsAdmin();
+  const { elections, loading, createElection, deleteElection, updateElectionStatus } = useElectionsAdmin();
   const [searchQuery, setSearchQuery] = useState("");
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -108,14 +109,23 @@ const ElectionsPage = () => {
                       </span>
                       <CardTitle className="font-display text-lg">{election.title}</CardTitle>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="text-destructive hover:text-destructive"
-                      onClick={() => setDeletingId(election.id)}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <Switch
+                        checked={election.status === "active"}
+                        onCheckedChange={(checked) =>
+                          updateElectionStatus(election.id, checked ? "active" : "upcoming")
+                        }
+                        aria-label="Toggle election active"
+                      />
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-destructive hover:text-destructive"
+                        onClick={() => setDeletingId(election.id)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </div>
                 </CardHeader>
                 <CardContent>
